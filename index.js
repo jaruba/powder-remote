@@ -133,18 +133,18 @@ powderApi.request = function (cType,val,cb) {
 powderApi.emit = function(cType,cValue) {
     if (!this.connection) return false;
     if (typeof cValue === 'object') this.connection.emit(cType, cValue);
-    else if (cValue) this.connection.emit(cType, { value: cValue });
+    else if (typeof cValue !== 'undefined') this.connection.emit(cType, { value: cValue });
     else this.connection.emit(cType);
     return true;
 };
     
-methods = ['play','pause','stop','next','prev','close','clearPlaylist','toggleFullscreen','toggleMute','mute','playItem','removeItem','notify']
+methods = ['play','pause','stop','next','prev','close','clearPlaylist','toggleFullscreen','toggleMute','playItem','removeItem','notify']
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i) { return this.emit(elem,i); } }(el) });
 
 methods = ['subCount','audioCount','fps','length','width','height','state','stateInt','itemCount','playing'];
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(cb) { return this.request(elem,cb) } }(el) });
 
-methods = ['currentItem','time','position','rate','subTrack','subDesc','subDelay','stateInt','itemCount','playing','audioTrack','audioDesc','audioDelay','audioChan','audioChanInt','itemDesc','volume','rate','aspectRatio','crop','zoom'];
+methods = ['currentItem','time','position','rate','subTrack','subDesc','subDelay','stateInt','itemCount','playing','audioTrack','audioDesc','audioDelay','audioChan','audioChanInt','itemDesc','volume','rate','aspectRatio','crop','zoom','mute','fullscreen'];
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) { return this.twoWay(elem,i,cb) } }(el) });
 
 powderApi.addPlaylist = function(settings) { this.emit('addPlaylist',{ value: settings }) };
