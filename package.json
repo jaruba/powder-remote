@@ -1,0 +1,25 @@
+
+{
+    "name": "powder-remote",
+    "description": "Node.js Controller for Powder Player",
+    "version": "0.0.1",
+    "license" : "LGPL-2.1",
+    "author": "Branza Victor-Alexandru <branza.alex@gmail.com>",
+    "keywords": [
+        "stream",
+        "torrent",
+        "player",
+        "webchimera.js",
+		"peerflix",
+        "vlc",
+        "libvlc"
+    ],
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/jaruba/powder-remote"
+    },
+    "dependencies": {
+        "socket.io": "*",
+		"deasync": "*"
+    }
+}
