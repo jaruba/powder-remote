@@ -28,7 +28,7 @@ Start a youtube video with a custom subtitle:
 	})
 
 
-Starting a video from a http server and listening to some the events:
+Starting a video from a http server and listening to some of the events:
 
     powder = require('powder-remote')
 
