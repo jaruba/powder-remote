@@ -10,7 +10,7 @@ else if (window.process.env.HOMEPATH) homePath = window.process.env.HOMEPATH;
 
 (({
     linux: ["/usr/bin/powder", "/usr/local/bin/powder"],
-    darwin: ["/Applications/Powder.app/Contents/MacOS/powder", homePath+"/Applications/Powder.app/Contents/MacOS/powder"],
+    darwin: ["/Applications/Powder Player.app/Contents/MacOS/nwjs", homePath+"/Applications/Powder Player.app/Contents/MacOS/nwjs"],
     win32: ["C:\\Program Files (x86)\\PowderPlayer\\powder.exe", "C:\\Program Files\\PowderPlayer\\powder.exe", "E:\\Siteuri\\PowderPlayer\\powder.exe"]
 })[window.process.platform] || []).forEach(function(path) {
     if (fs.existsSync(path)) powderPath = path;
