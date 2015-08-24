@@ -10,7 +10,7 @@
         "torrent",
         "player",
         "webchimera.js",
-		"peerflix",
+        "peerflix",
         "vlc",
         "libvlc"
     ],
@@ -20,6 +20,6 @@
     },
     "dependencies": {
         "socket.io": "*",
-		"deasync": "*"
+        "deasync": "*"
     }
 }
