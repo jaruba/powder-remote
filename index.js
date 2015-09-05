@@ -1,12 +1,16 @@
 var portrange = 45032,
     net = require('net'),
     fs = require('fs'),
+	events = require('events'),
     powderPath,
     homePath,
-    powderApi = { connection: false, keepCBs: [], keepDone: [], keepResults: [], events: false },
+    powderApi = new events.EventEmitter(),
 	params = {},
 	defaults = { state: { 'Idle': 0, 'Opening': 1, 'Buffering': 2, 'Playing': 3, 'Paused': 4, 'Stopping': 5, 'Ended': 6, 'Error': 7 } };
     
+powderApi.connection = false;
+powderApi.keepCBs = [];
+
 if (window.process.env.HOME) homePath = window.process.env.HOME;
 else if (window.process.env.HOMEPATH) homePath = window.process.env.HOMEPATH;
 
@@ -34,16 +38,14 @@ powderApi.startPlayer = function(cb) {
     player = this;
     getPort(function(port) {
         var io = require('socket.io').listen(port),
-            secret = Math.floor(Date.now() / 1000),
-            eventInit = require('events');
-        player.events = new eventInit.EventEmitter();
+            secret = Math.floor(Date.now() / 1000);
         require('child_process').exec('"'+powderPath+'" --controller-secret='+secret+' --controller-port='+port);
         io.on('connection', function(player){
             return function(socket){
                 io.emit('secret', { message: secret });
                 socket.on('event', function(webData) {
-                    if (typeof webData.value !== 'undefined') player.events.emit(webData.name, webData.value);
-                    else if (webData.name) player.events.emit(webData.name);
+                    if (typeof webData.value !== 'undefined') powderApi.emit(webData.name, webData.value);
+                    else if (webData.name) powderApi.emit(webData.name);
                 });
                 
                 socket.on('async', function(webData) {
@@ -98,7 +100,7 @@ powderApi.async = function (cValue,cType,val) {
         this.keepCBs.push(cValue);
         var set = { cbType: 'async', ind: this.keepCBs.length -1 };
         if (typeof val !== 'undefined') set.value = val;
-        this.emit(cType, set);
+        this.send(cType, set);
         return true;
     } else return false;
 };
@@ -123,7 +125,7 @@ powderApi.request = function (cType,val,cb) {
     return true;
 };
 
-powderApi.emit = function(cType,cValue) {
+powderApi.send = function(cType,cValue) {
     if (!this.connection) return false;
     if (typeof cValue === 'object') this.connection.emit(cType, cValue);
     else if (typeof cValue !== 'undefined') this.connection.emit(cType, { value: cValue });
@@ -134,7 +136,7 @@ powderApi.emit = function(cType,cValue) {
 powderApi.params = function() { return params };
     
 methods = ['play','pause','stop','next','prev','close','clearPlaylist','toggleFullscreen','toggleMute','playItem','removeItem','notify']
-methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i) { return this.emit(elem,i); } }(el) });
+methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i) { return this.send(elem,i); } }(el) });
 
 methods = ['subCount','audioCount','fps','length','width','height','state','stateInt','itemCount','playing'];
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(cb) { return this.request(elem,cb) } }(el) });
@@ -150,9 +152,9 @@ methods.forEach(function(el) { powderApi[el] = function(elem) { return function(
 } }(el) });
 
 methods = ['torrentPlay','torrentPause'];
-methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) { this.emit(el,{ }); return true; } }(el) });
+methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) { this.send(el,{ }); return true; } }(el) });
 
-powderApi.addPlaylist = function(settings) { this.emit('addPlaylist',{ value: settings }) };
-powderApi.advanceItem = function(pValue,cValue) { return this.emit('advanceItem', { prev: pValue, count: cValue }); },
+powderApi.addPlaylist = function(settings) { this.send('addPlaylist',{ value: settings }) };
+powderApi.advanceItem = function(pValue,cValue) { return this.send('advanceItem', { prev: pValue, count: cValue }); },
 
 module.exports = powderApi;
