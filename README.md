@@ -4,18 +4,25 @@ Node.js Controller for [Powder Player](https://github.com/jaruba/PowderPlayer).
 
 Supports Magnet Links, Youtube Links and all VLC supported Media Files/URLs (for local files use ``file:///`` in front of the absolute file paths)
 
-[**Building Powder Remote**](https://github.com/jaruba/powder-remote/wiki)
-
 [**JavaScript API**](https://github.com/jaruba/powder-remote/wiki/JavaScript-API)
+
+### Install
+
+    npm install powder-remote
+
+
+### Initiation
+
+	pRemote = require('powder-remote')
+	
+	powder = new pRemote()
+
 
 ### Example Usage
 
-Start a youtube video with a custom subtitle:
+Start a youtube video in fullscreen mode with a custom subtitle:
 
-
-	powder = require('powder-remote')
-	
-	powder.startPlayer(function() {
+	powder.startPlayer(['--fs'],function() {
 	
 		this.addPlaylist({
 			url: "https://www.youtube.com/watch?v=HomAZcKm3Jo",
@@ -30,8 +37,6 @@ Start a youtube video with a custom subtitle:
 
 
 Starting a video from a http server and listening to some of the events:
-
-    powder = require('powder-remote')
 
     powder.startPlayer(function() {
         this.addPlaylist({
