@@ -3,7 +3,9 @@ var portrange = 45032,
     fs = require('fs'),
     powderPath,
     homePath,
-    powderApi = { connection: false, keepCBs: [], keepDone: [], keepResults: [], events: false };
+    powderApi = { connection: false, keepCBs: [], keepDone: [], keepResults: [], events: false },
+	params = {},
+	defaults = { state: { 'Idle': 0, 'Opening': 1, 'Buffering': 2, 'Playing': 3, 'Paused': 4, 'Stopping': 5, 'Ended': 6, 'Error': 7 } };
     
 if (window.process.env.HOME) homePath = window.process.env.HOME;
 else if (window.process.env.HOMEPATH) homePath = window.process.env.HOMEPATH;
@@ -44,13 +46,6 @@ powderApi.startPlayer = function(cb) {
                     else if (webData.name) player.events.emit(webData.name);
                 });
                 
-                socket.on('sync', function(webData) {
-                    if (typeof webData.value !== 'undefined' && typeof webData.ind !== 'undefined' && typeof player.keepDone[webData.ind] !== 'undefined') {
-                        player.keepResults[webData.ind] = webData.value;
-                        player.keepDone[webData.ind] = true;
-                    }
-                });
-                
                 socket.on('async', function(webData) {
                     if (typeof webData.value !== 'undefined' && typeof webData.ind !== 'undefined' && typeof player.keepCBs[webData.ind] !== 'undefined') {
                         player.keepCBs[webData.ind](webData.value);
@@ -60,6 +55,37 @@ powderApi.startPlayer = function(cb) {
                         delete player.keepCBs[webData.ind];
                     }
                 });
+
+                socket.on('update', function(webData) {
+					if (webData.name && typeof webData.value !== 'undefined') {
+						params[webData.name] = webData.value;
+					}
+                });
+				
+				socket.on('event', function(webData) {
+					if (typeof webData.value !== 'undefined') {
+						if (webData.name == 'State') {
+							webData.value = webData.value.charAt(0).toUpperCase() + webData.value.slice(1); // capitalize first letter
+							if (defaults.state[webData.value]) {
+								params.state = webData.value;
+								params.stateInt = defaults.state[webData.value];
+								if (webData.value == 'Playing') params.playing = true;
+								else  params.playing = false;
+							}
+						} else if (webData.name == 'Time') params.time = webData.value;
+						else if (webData.name == 'Position') params.position = webData.value;
+						else if (webData.name == 'MediaChanged') {
+							params.currentItem = webData.value;
+							params.subTrack = 0;
+							params.subDelay = 0;
+							params.aspectRatio = 'Default';
+							params.crop = 'Default';
+							params.zoom = 1;
+						}
+						else if (webData.name == 'TorrentProgress') params.torrentProgress = webData.value;
+					}
+                });
+                
                 cb.call(player);
             }
         }(player));
@@ -77,22 +103,6 @@ powderApi.async = function (cValue,cType,val) {
     } else return false;
 };
 
-powderApi.sync = function(cType,val) {
-    if (this.connection && typeof cType === 'string') {
-        this.keepDone.push(false);
-        index = this.keepDone.length -1;
-        var set = { cbType: 'sync', ind: index };
-        if (typeof val !== 'undefined') set.value = val;
-        this.connection.emit(cType, set);
-        player = this;
-        setTimeout(function(wjsPlayer,wjsIndex){ return function() { wjsPlayer.keepResults[wjsIndex] = false; wjsPlayer.keepDone[index] = true; } }(player,index),150);
-        require('deasync').loopWhile(function(){ return !player.keepDone[index]; });
-        delete this.keepDone[index];
-        setTimeout(function(wjsPlayer,wjsIndex){ return function() { delete wjsPlayer.keepResults[wjsIndex]; } }(player,index),100);
-        return this.keepResults[index];
-    } else return false;
-};
-
 powderApi.twoWay = function (cType,val,cb) {
     if (!this.connection) return false;
     if (typeof cb === 'function') return this.request(cType,val,cb);
@@ -105,8 +115,11 @@ powderApi.request = function (cType,val,cb) {
     if (!this.connection) return false;
     if (typeof val === 'function') this.async(val,cType);
     else if (typeof cb === 'function') this.async(cb,cType,val);
-    else if (typeof val !== 'undefined') return this.sync(cType,val);
-    else return this.sync(cType);
+    else if (typeof val !== 'undefined') this.async(function() {},cType,val);
+	else {
+		if (typeof params[cType] !== 'undefined') return params[cType];
+		else return false;
+	}
     return true;
 };
 
@@ -117,6 +130,8 @@ powderApi.emit = function(cType,cValue) {
     else this.connection.emit(cType);
     return true;
 };
+
+powderApi.params = function() { return params };
     
 methods = ['play','pause','stop','next','prev','close','clearPlaylist','toggleFullscreen','toggleMute','playItem','removeItem','notify']
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i) { return this.emit(elem,i); } }(el) });
@@ -124,8 +139,18 @@ methods.forEach(function(el) { powderApi[el] = function(elem) { return function(
 methods = ['subCount','audioCount','fps','length','width','height','state','stateInt','itemCount','playing'];
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(cb) { return this.request(elem,cb) } }(el) });
 
-methods = ['currentItem','time','position','rate','subTrack','subDesc','subDelay','stateInt','itemCount','playing','audioTrack','audioDesc','audioDelay','audioChan','audioChanInt','itemDesc','volume','rate','aspectRatio','crop','zoom','mute','fullscreen'];
+methods = ['currentItem','time','position','rate','subTrack','subDelay','stateInt','itemCount','playing','audioTrack','audioDelay','audioChan','audioChanInt','volume','rate','aspectRatio','crop','zoom','mute','fullscreen','torrentProgress'];
 methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) { return this.twoWay(elem,i,cb) } }(el) });
+
+methods = ['subDesc','audioDesc','itemDesc'];
+methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) {
+	if (typeof i !== 'undefined' && typeof cb === 'function') {
+		 return this.twoWay(elem,i,cb)
+	} else throw("Error: Value and Callback Function are mandatory for this method.");
+} }(el) });
+
+methods = ['torrentPlay','torrentPause'];
+methods.forEach(function(el) { powderApi[el] = function(elem) { return function(i,cb) { this.emit(el,{ }); return true; } }(el) });
 
 powderApi.addPlaylist = function(settings) { this.emit('addPlaylist',{ value: settings }) };
 powderApi.advanceItem = function(pValue,cValue) { return this.emit('advanceItem', { prev: pValue, count: cValue }); },
