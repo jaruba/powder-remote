@@ -164,6 +164,12 @@ function api() {
 	powderApi.addPlaylist = function(settings) { this.send('addPlaylist',{ value: settings }) };
 	powderApi.advanceItem = function(pValue,cValue) { return this.send('advanceItem', { prev: pValue, count: cValue }); };
 	
+	powderApi.mediaFiles = function() {
+		if (powderApi.params.mediaFiles) {
+			return powderApi.params.mediaFiles;
+		} else return false;
+	}
+	
 	return powderApi;
 
 }
