@@ -1,5 +1,7 @@
 # Powder Remote
 
+**This project has been replaced with the [Powder Player Web API](https://github.com/jaruba/PowderPlayer/wiki/Web-API-Docs)!**
+
 Node.js Controller for [Powder Player](https://github.com/jaruba/PowderPlayer).
 
 Supports Magnet Links, Youtube Links and all VLC supported Media Files/URLs (for local files use ``file:///`` in front of the absolute file paths)
