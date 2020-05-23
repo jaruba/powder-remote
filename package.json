@@ -19,6 +19,6 @@
         "url" : "https://github.com/jaruba/powder-remote"
     },
     "dependencies": {
-        "socket.io": "*"
+        "needle": "^2.5.0"
     }
 }
