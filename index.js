@@ -137,7 +137,7 @@ function api() {
     powderApi.send = function(cType,cValue) {
         return new Promise((resolve, reject) => {
             let extra = ''
-            if (typeof cValue === 'string') extra += '?value=' + encodeURIComponent(cValue)
+            if (typeof cValue === 'string' || typeof cValue === 'boolean') extra += '?value=' + encodeURIComponent(cValue)
             else if (typeof cValue === 'object' && cValue !== null) extra += '?' + serialize(cValue)
             needle.get(this.host + cType + extra, (err, resp, body) => {
                 if ((resp || {}).statusCode == 200)
