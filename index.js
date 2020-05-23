@@ -102,7 +102,7 @@ function api() {
         })
     }
 
-    powderApi.startPlayer = function(opts) {
+    powderApi.start_player = function(opts) {
         return new Promise((resolve, reject) => {
             opts = opts || {}
             if (!Array.isArray(opts.args) || !(opts.args || []).length) opts.args = []
