@@ -1,8 +1,6 @@
 # Powder Remote
 
-**This project has been replaced with the [Powder Player Web API](https://github.com/jaruba/PowderPlayer/wiki/Web-API-Docs)!**
-
-Node.js Controller for [Powder Player](https://github.com/jaruba/PowderPlayer).
+Node.js Controller for [Powder Player](https://github.com/jaruba/PowderPlayer) based on the [Web API](https://github.com/jaruba/PowderPlayer/wiki/Web-API-Docs).
 
 Supports Magnet Links, Youtube Links and all VLC supported Media Files/URLs (for local files use ``file:///`` in front of the absolute file paths)
 
@@ -16,42 +14,44 @@ Supports Magnet Links, Youtube Links and all VLC supported Media Files/URLs (for
 
 ### Initiation
 
-	pRemote = require('powder-remote')
+```javascript
+const pRemote = require('powder-remote')
 	
-	powder = new pRemote()
+const powder = new pRemote()
+```
 
 
 ### Example Usage
 
-Start a youtube video in fullscreen mode with a custom subtitle:
+Start a youtube video in fullscreen mode:
 
-	powder.startPlayer(['--fs'],function() {
-	
-		this.addPlaylist({
-			url: "https://www.youtube.com/watch?v=HomAZcKm3Jo",
-			title: "Custom Title",
-			defaultSub: "Custom Subtitle",
-			subtitles: {
-			  "Custom Subtitle": "http://dl.opensubtitles.org/en/download/subencoding-utf8/file/1952537611.srt"
-			}
-		})
+```javascript
+powder.start_player({ args: ['--fs'] }).then(remote => {
 
-	})
+    remote.add_playlist({
+        url: "https://www.youtube.com/watch?v=HomAZcKm3Jo"
+    })
 
+}).catch(e => {
+    console.error(e)
+})
+```
 
 Starting a video from a http server and listening to some of the events:
 
-    powder.startPlayer(function() {
-        this.addPlaylist({
-            url: "http://trailers.divx.com/divx_prod/divx_plus_hd_showcase/Sintel_DivXPlus_6500kbps.mkv",
-            title: "Sintel 2010"
-        })
-        this.on("Opening",function() { console.log("Opening") })
-        this.on("Buffering",function(prc) { console.log("Buffering: "+prc) })
-        this.on("Playing",function() { console.log("Playing") })
-        this.on("Paused",function() { console.log("Paused") })
-        this.on("Stopped",function() { console.log("Stopped") })
-        this.on("Ended",function() { console.log("Ended") })
-        this.on("MediaChanged",function() { console.log("Media Changed") })
-        this.on("TorrentProgress",function(prc) { console.log("Torrent Progress: "+prc) })
+```javascript
+powder.start_player().then(remote => {
+    remote.add_playlist({
+        url: "https://download.blender.org/durian/movies/Sintel.2010.1080p.mkv"
     })
+    remote.on("initialPlay",function() { console.log("initialPlay") })
+    remote.on("Opening",function() { console.log("Opening") })
+    remote.on("Buffering",function() { console.log("Buffering") })
+    remote.on("Playing",function() { console.log("Playing") })
+    remote.on("Paused",function() { console.log("Paused") })
+    remote.on("Stopped",function() { console.log("Stopped") })
+    remote.on("Ended",function() { console.log("Ended") })
+}).catch(e => {
+    console.error(e)
+})
+```
