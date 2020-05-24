@@ -36,7 +36,7 @@ function poll(host, cb) {
         cb(true)
         return
     }
-    needle.get(host, (err, resp, body) => {
+    needle.get(host + 'time', (err, resp, body) => {
         if (((resp || {}).headers || {})['x-powered-by'] == 'Express') {
             cb(null, true)
             return
@@ -80,17 +80,17 @@ function api() {
         needle.get(host + 'state', (err, resp, body) => {
             if ((resp || {}).statusCode == 200 && body) {
                 const obj = toObject(body)
-                if ((obj || {}).state) {
-                    if (!initialPlay && ['Buffering', 'Playing', 'Paused'].includes(obj.state)) {
+                if (((obj || {}).response || {}).state) {
+                    if (!initialPlay && ['Buffering', 'Playing', 'Paused'].includes(obj.response.state)) {
                         initialPlay = true
                         powderApi.emit('initialPlay')
                     }
-                    if (obj.state != lastEvent) {
+                    if (obj.response.state != lastEvent) {
                         let event
-                        if (['NothingSpecial', 'Stopped'].includes(obj.state))
+                        if (['NothingSpecial', 'Stopped'].includes(obj.response.state))
                             event = 'Stopped'
                         else
-                            event = obj.state
+                            event = obj.response.state
                         lastEvent = event
                         powderApi.emit(event)
                     }
@@ -102,7 +102,7 @@ function api() {
         })
     }
 
-    powderApi.start_player = function(opts) {
+    powderApi.startPlayer = function(opts) {
         return new Promise((resolve, reject) => {
             opts = opts || {}
             if (!Array.isArray(opts.args) || !(opts.args || []).length) opts.args = []
@@ -137,13 +137,18 @@ function api() {
     powderApi.send = function(cType,cValue) {
         return new Promise((resolve, reject) => {
             let extra = ''
-            if (typeof cValue === 'string' || typeof cValue === 'boolean') extra += '?value=' + encodeURIComponent(cValue)
-            else if (typeof cValue === 'object' && cValue !== null) extra += '?' + serialize(cValue)
+            if (typeof cValue === 'object' && cValue !== null) extra += '?' + serialize(cValue)
+            else if (typeof cValue !== 'undefined') extra += '?value=' + encodeURIComponent(cValue)
             needle.get(this.host + cType + extra, (err, resp, body) => {
-                if ((resp || {}).statusCode == 200)
-                    resolve(body)
-                else
-                    reject(body || ('Error occurred while sending command: ' + cType))
+                let obj
+
+                if (body)
+                    obj = toObject(body)
+
+                if ((resp || {}).statusCode == 200) {
+                    resolve((obj || {}).success ? obj.response : undefined)
+                } else
+                    reject((obj || {}).reason || ('Error occurred while sending command: ' + cType))
             })
         })
     }
@@ -177,10 +182,7 @@ function api() {
             return function(i) {
                 return new Promise((resolve, reject) => {
                     this.send(elem,i).then(body => {
-                        if (body)
-                            resolve(toObject(body) || body)
-                        else
-                            reject(Error('Response empty'))
+                        resolve(body)
                     }).catch(reject)
                 })
             }
