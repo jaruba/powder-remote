@@ -12,7 +12,7 @@ else if (process.env.HOMEPATH) homePath = process.env.HOMEPATH;
 (({
     linux: ["/usr/bin/PowderPlayer/powder", "/usr/local/bin/PowderPlayer/powder", "/usr/bin/PowderPlayer/PowderPlayer/powder", "/usr/local/bin/PowderPlayer/PowderPlayer/powder", homePath+"/Desktop/PowderPlayer/powder", homePath+"/Desktop/PowderPlayer/PowderPlayer/powder"],
     darwin: ["/Applications/Powder Player.app/Contents/MacOS/Electron", homePath+"/Applications/Powder Player.app/Contents/MacOS/Electron", homePath+"/Desktop/Powder Player.app/Contents/MacOS/Electron"],
-    win32: ["C:\\Program Files (x86)\\Powder Player\\powder.exe", "C:\\Program Files\\Powder Player\\powder.exe", "E:\\Siteuri\\PowderPlayer\\powder.exe"]
+    win32: ["C:\\Program Files (x86)\\Powder Player\\powder.exe", "C:\\Program Files\\Powder Player\\powder.exe"]
 })[process.platform] || []).forEach(function(path) {
     if (fs.existsSync(path)) powderPath = path
 })
@@ -36,7 +36,7 @@ function poll(host, cb) {
         cb(true)
         return
     }
-    needle.get(host + 'time', (err, resp, body) => {
+    needle.get(host, (err, resp, body) => {
         if (((resp || {}).headers || {})['x-powered-by'] == 'Express') {
             cb(null, true)
             return
@@ -102,14 +102,26 @@ function api() {
         })
     }
 
-    powderApi.startPlayer = function(opts) {
+    powderApi.start_player = function(opts) {
         return new Promise((resolve, reject) => {
             opts = opts || {}
             if (!Array.isArray(opts.args) || !(opts.args || []).length) opts.args = []
-            if (!powderPath) {
-                reject(Error("Powder Player could not be found. Please set path manually."))
+
+            if (!powderPath && !opts.path) {
+                reject(Error("Powder Player could not be found. Please set opts.path manually."))
                 return
             }
+
+            if (opts.path) {
+                if (fs.existsSync(opts.path)) {
+                    powderPath = opts.path
+                } else {
+                    reject(Error("Powder Player could not be found at: " + opts.path))
+                    return
+                }
+            }
+
+            if (opts.path)
 
             player = this
 
