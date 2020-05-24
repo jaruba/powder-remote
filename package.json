@@ -2,7 +2,7 @@
 {
     "name": "powder-remote",
     "description": "Node.js Controller for Powder Player",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "license" : "LGPL-2.1",
     "author": "Branza Victor-Alexandru <branza.alex@gmail.com>",
     "keywords": [
