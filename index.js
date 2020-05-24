@@ -121,8 +121,6 @@ function api() {
                 }
             }
 
-            if (opts.path)
-
             player = this
 
             getPort(function(port) {
